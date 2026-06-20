@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>打卡系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ink-navy: #1B2430;
+      --ink-navy-deep: #11161D;
+      --kraft: #D9C8A0;
+      --kraft-edge: #C2AE7E;
+      --ink-blue: #2F4858;
+      --ink-red: #AE3B33;
+      --brass: #9C7A3C;
+      --paper-text: #2B2118;
+      --off-white: #F3EFE5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% -10%, #283447 0%, var(--ink-navy) 45%, var(--ink-navy-deep) 100%);
+      font-family: 'Noto Sans TC', sans-serif;
+      color: var(--off-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .scene {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .card {
+      width: 100%;
+      background: var(--kraft);
+      color: var(--paper-text);
+      border-radius: 6px;
+      border: 1px solid var(--kraft-edge);
+      box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.55), 0 2px 0 var(--kraft-edge) inset;
+      padding: 30px 24px 22px;
+      position: relative;
+    }
+
+    .card::before,
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ink-navy-deep);
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.6);
+    }
+
+    .card::before {
+      left: 14px;
+    }
+
+    .card::after {
+      right: 14px;
+    }
+
+    .card__eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--brass);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .card__date {
+      text-align: center;
+      font-size: 13px;
+      color: #5b4c33;
+      margin-bottom: 2px;
+    }
+
+    .card__clock {
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 40px;
+      letter-spacing: 0.02em;
+      margin-bottom: 22px;
+      color: var(--paper-text);
+    }
+
+    .punch-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .punch-btn {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid currentColor;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      padding: 16px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-family: 'Noto Sans TC', sans-serif;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .punch-btn:active {
+      transform: scale(0.96);
+    }
+
+    .punch-btn--in {
+      color: var(--ink-blue);
+    }
+
+    .punch-btn--out {
+      color: var(--ink-red);
+    }
+
+    .punch-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .punch-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .punch-btn:focus-visible {
+      outline: 3px solid var(--brass);
+      outline-offset: 2px;
+    }
+
+    .punch-btn__label {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .punch-btn__sub {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .punch-btn.is-stamping::after {
+      content: '蓋章';
+      position: absolute;
+      inset: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      color: inherit;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.7);
+      animation: stampImpact 0.55s cubic-bezier(.2, 1.6, .4, 1);
+    }
+
+    @keyframes stampImpact {
+      0% {
+        opacity: 0;
+        transform: scale(2.4) rotate(-12deg);
+      }
+
+      55% {
+        opacity: 1;
+        transform: scale(0.9) rotate(4deg);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    .status-line {
+      min-height: 18px;
+      text-align: center;
+      font-size: 13px;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .status-line--success {
+      color: var(--ink-blue);
+    }
+
+    .status-line--error {
+      color: var(--ink-red);
+    }
+
+    .ledger {
+      border-top: 1px dashed var(--kraft-edge);
+      padding-top: 12px;
+    }
+
+    .ledger__title {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brass);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .ledger__rows {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .ledger__empty {
+      font-size: 13px;
+      color: #7a6a48;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .ledger__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      padding: 6px 8px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.35);
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .ledger__row--in {
+      border-left: 3px solid var(--ink-blue);
+    }
+
+    .ledger__row--out {
+      border-left: 3px solid var(--ink-red);
+    }
+
+    .ledger__time {
+      font-weight: 700;
+    }
+
+    .ledger__type {
+      color: #5b4c33;
+    }
+
+    .ledger__seal {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.55;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      color: rgba(243, 239, 229, 0.6);
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .punch-btn.is-stamping::after {
+        animation: none;
+      }
+
+      .punch-btn:active {
+        transform: none;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .card__clock {
+        font-size: 32px;
+      }
+
+      .punch-btn__label {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scene">
+    <div class="card" id="timecard">
+      <div class="card__eyebrow">個人打卡系統</div>
+      <div class="card__date" id="dateLine">—</div>
+      <div class="card__clock" id="clockLine">--:--:--</div>
+
+      <div class="punch-row">
+        <button class="punch-btn punch-btn--in" id="btnIn" type="button">
+          <span class="punch-btn__label">上班</span>
+          <span class="punch-btn__sub">PUNCH IN</span>
+        </button>
+        <button class="punch-btn punch-btn--out" id="btnOut" type="button">
+          <span class="punch-btn__label">下班</span>
+          <span class="punch-btn__sub">PUNCH OUT</span>
+        </button>
+      </div>
+
+      <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
+
+      <div class="ledger">
+        <div class="ledger__title">今日紀錄</div>
+        <div class="ledger__rows" id="ledgerRows">
+          <div class="ledger__empty">尚無打卡紀錄</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note" id="footerNote">尚未設定 Google Sheet 連線</div>
+  </div>
+
+  <script>
+    // ============================================================
+    // 請把下面的網址換成你部署 Apps Script 網頁應用程式後拿到的網址
+    // 結尾應該會是 /exec，例如：
+    // https://script.google.com/macros/s/AKfycb.../exec
+    // ============================================================
+    var CONFIG = {
+      API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'
+    };
+
+    var dateLine = document.getElementById('dateLine');
+    var clockLine = document.getElementById('clockLine');
+    var statusLine = document.getElementById('statusLine');
+    var ledgerRows = document.getElementById('ledgerRows');
+    var footerNote = document.getElementById('footerNote');
+    var btnIn = document.getElementById('btnIn');
+    var btnOut = document.getElementById('btnOut');
+
+    function tick() {
+      var now = new Date();
+      var dateFmt = now.toLocaleDateString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', timeZone: 'Asia/Taipei'
+      });
+      var timeFmt = now.toLocaleTimeString('zh-TW', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei'
+      });
+      dateLine.textContent = dateFmt;
+      clockLine.textContent = timeFmt;
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    function isConfigured() {
+      return CONFIG.API_URL && CONFIG.API_URL.indexOf('https://script.google.com/macros/s/AKfycbwEepTZu-r3MK2HRukFk1wRYqzRaogIEIuU1P9SUKcafX5Zfq1K7z5PJXCEJsBurng9Pw/exec') === 0;
+    }
+
+    function setStatus(message, type) {
+      statusLine.textContent = message;
+      statusLine.className = 'status-line status-line--' + (type || 'info');
+    }
+
+    function renderLedgerRow(time, type) {
+      var empty = ledgerRows.querySelector('.ledger__empty');
+      if (empty) empty.remove();
+
+      var row = document.createElement('div');
+      row.className = 'ledger__row ledger__row--' + (type === '上班' ? 'in' : 'out');
+      var rot = (Math.random() * 4 - 2).toFixed(1);
+      row.style.setProperty('--rot', rot + 'deg');
+      row.innerHTML =
+        '<span class="ledger__time">' + time + '</span>' +
+        '<span class="ledger__type">' + type + '</span>' +
+        '<span class="ledger__seal">已蓋章</span>';
+      ledgerRows.appendChild(row);
+    }
+
+    function punch(type, btn) {
+      if (!isConfigured()) {
+        setStatus('尚未設定 Google Sheet 連線網址，請編輯 index.html 中的 CONFIG.API_URL', 'error');
+        return;
+      }
+
+      btnIn.disabled = true;
+      btnOut.disabled = true;
+      btn.classList.add('is-stamping');
+
+      var body = new URLSearchParams({
+        type: type,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform || ''
+      });
+
+      fetch(CONFIG.API_URL, { method: 'POST', body: body })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data.status === 'success') {
+            setStatus('✓ ' + type + '打卡成功 — ' + data.time, 'success');
+            renderLedgerRow(data.time, data.type);
+          } else {
+            setStatus('打卡失敗：' + (data.message || '未知錯誤'), 'error');
+          }
+        })
+        .catch(function () {
+          setStatus('連線失敗，請檢查網路或 Apps Script 部署設定', 'error');
+        })
+        .finally(function () {
+          setTimeout(function () { btn.classList.remove('is-stamping'); }, 600);
+          btnIn.disabled = false;
+          btnOut.disabled = false;
+        });
+    }
+
+    btnIn.addEventListener('click', function () { punch('上班', btnIn); });
+    btnOut.addEventListener('click', function () { punch('下班', btnOut); });
+
+    function loadToday() {
+      if (!isConfigured()) {
+        footerNote.textContent = '尚未設定 Google Sheet 連線';
+        return;
+      }
+      footerNote.textContent = '已連接 Google Sheet';
+
+      fetch(CONFIG.API_URL + '?action=today')
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data.status === 'success' && data.records && data.records.length) {
+            data.records.forEach(function (r) { renderLedgerRow(r.time, r.type); });
+          }
+        })
+        .catch(function () {
+          footerNote.textContent = '無法讀取今日紀錄（不影響打卡功能）';
+        });
+    }
+    loadToday();
+  </script>
+</body>
+
+</html>
